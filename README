@@ -1,6 +1,9 @@
 = sc2epub
 convert sourcecode to epub
 
+== install
+ $ gem install sc2epub
+
 == usage
  $ sc2epub some_directory output_directory project_name
  $ cd output_directory
