@@ -1,0 +1,22 @@
+PROJECT = %(title)
+EPUB = $(PROJECT).epub
+MOBI = $(PROJECT).mobi
+KINDLEGEN = kindlegen
+
+.PHONY: all
+all: $(EPUB)
+
+.PHONY: kindle
+kindle: $(MOBI)
+
+.PHONY: clean
+clean:
+	find ./ -name "*.epub" -exec rm {} \\;
+	find ./ -name "*.mobi" -exec rm {} \\;
+
+$(EPUB):
+	zip -Xr9D $(EPUB) mimetype META-INF toc.ncx $(PROJECT).opf
+	find ./ -name "*.html" -o -name "*.jpg" | xargs zip -Xr9D $(EPUB)
+
+$(MOBI): $(EPUB)
+	$(KINDLEGEN) $(EPUB)

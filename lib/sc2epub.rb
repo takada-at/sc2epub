@@ -1,3 +1,6 @@
 module Sc2epub
-    VERSION = "0.0.2"
+    require 'sc2epub/converter'
+    require 'sc2epub/template'
+    require 'sc2epub/main'
+    VERSION = "0.0.3"
 end

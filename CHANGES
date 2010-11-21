@@ -1,3 +1,9 @@
+= 0.0.3
+Rewrite some class.
+Add encoding-convert.
+Add tests.
+Add lang options.
+
 = 0.0.2
 use Makefile. add cover.jpg
 
