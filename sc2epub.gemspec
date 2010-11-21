@@ -12,7 +12,7 @@ GEMSPEC = Gem::Specification::new do |s|
     s.executables = ['sc2epub']
     s.default_executable = 'sc2epub'
 
-    s.files = Dir::glob("{lib,bin}/**/*") + ['sc2epub.gemspec', 'README', 'CHANGES']
+    s.files = Dir::glob("{lib,bin,test}/**/*") + ['sc2epub.gemspec', 'README', 'CHANGES']
     s.has_rdoc = false
     s.homepage = 'https://github.com/takada-at/sc2epub'
     s.rubyforge_project = 'sc2epub'
