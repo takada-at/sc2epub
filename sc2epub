@@ -1,0 +1,212 @@
+#!/usr/bin/env ruby
+
+require 'kconv'
+TEMPLATE = <<EOS
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja-JP" lang="ja-JP"><head><title>%(title)</title><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><head/><body>
+<h1>%(title)</h1>
+<pre>
+%(body)
+</pre>
+</body>
+</html>
+EOS
+TEMPLATE_INDEX = <<EOS
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja-JP" lang="ja-JP"><head><title>%(title)</title><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><head/><body>
+<a name='#TOC' /><h1>INDEX</h1>
+%(body)
+</body>
+</html>
+EOS
+TEMPLATE_LINK = <<EOS
+<a href="%(url)">%(title)</a>
+EOS
+TEMPLATE_OPF = <<EOS
+<?xml version="1.0" encoding="utf-8"?>
+<package unique-identifier="uid">
+  <metadata>
+    <dc-metadata xmlns:dc="http://purl.org/metadata/dublin_core"
+    xmlns:oebpackage="http://openebook.org/namespaces/oeb-package/1.0/">
+      <dc:Title>%(title)</dc:Title>
+      <dc:Language>ja</dc:Language>
+      <dc:Creator>takada-at</dc:Creator>
+      <dc:Description>..</dc:Description>
+      <dc:Date>%(date)</dc:Date>
+    </dc-metadata>
+    <x-metadata>
+      <output encoding="utf-8" content-type="text/x-oeb1-document">
+      </output>
+    </x-metadata>
+  </metadata>
+  <manifest>
+    <item id="index" media-type-"text/x-oeb1-document" href="index.html"></item>
+    %(items)
+    <item id="toc" media-type="application/x-dtbncx+xml" href="toc.ncx"></item>
+  </manifest>
+  <spine toc="toc">
+    <itemref idref="index" />
+  </spine>
+  <tours></tours>
+  <guide>
+    <reference type="toc" title="Table of Contents" href="index.html"></reference>
+    <reference type="start" title="Table of Contents" href="index.html"></reference>
+  </guide>
+</package>
+EOS
+TEMPLATE_ITEM = <<EOS
+    <item id="%(id)" media-type="text/x-oeb1-document" href="%(link)"></item>
+EOS
+TEMPLATE_NCX = <<EOS
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE ncx PUBLIC "-//NISO//DTD ncx 2005-1//EN" "http://www.daisy.org/z3986/2005/ncx-2005-1.dtd">
+<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">
+   <docTitle><text>%(title)</text></docTitle>
+   <navMap>
+      %(navitems)
+   </navMap>
+</ncx>
+EOS
+TEMPLATE_NAVITEM = <<EOS
+      <navPoint id="%(id)" playOrder="%(order)">
+         <navLabel><text>%(title)</text></navLabel><content src="%(link)"/>
+      </navPoint>
+EOS
+def local path
+    if path.index($root)==0
+        path = path[$root.size, path.size]
+    end
+    if path[0,1] == "/"
+        path = path[1, path.size]
+    end
+    return path
+end
+def title path
+    path.gsub(/\//, "_").gsub(/\./, '_')
+end
+def dogenerate output, doctitle
+    contents = ['index.html', 'toc.ncx']
+    indexhtml = ''
+    items = ''; c=0;
+    nvitems = ''
+    $indexes.each do |data|
+        title = data[:name]
+        link = data[:src]
+        contents << link
+        if data[:type]==:dir && data[:level]+2<=4
+            tagname = "h" + (data[:level]+2).to_s
+        else
+            tagname = 'p'
+        end
+        indexhtml += "<#{tagname}>" + dotemplate(TEMPLATE_LINK, 'url'=>link, 'title'=>title) + "</#{tagname}>\n"
+        if data[:type]==:file
+            items += dotemplate(TEMPLATE_ITEM, 'id'=>"item#{c+=1}", 'link'=>link)
+            nvitems += dotemplate(TEMPLATE_NAVITEM, 'id'=>"navPoint-#{c}", 'order'=>c.to_s, 'link'=>link, 'title'=>title)
+        end
+    end
+    indexhtml = dotemplate(TEMPLATE_INDEX, 'title'=>'index', 'body'=>indexhtml)
+    opf = dotemplate(TEMPLATE_OPF, 'title'=>doctitle, 'date'=>Time::now.strftime("%Y/%m/%d"), 'items'=>items)
+    ncx = dotemplate(TEMPLATE_NCX, 'title'=>doctitle, 'navitems'=>nvitems)
+    open(File::join(output, 'index.html'), 'w') do |io|
+        io.write(indexhtml)
+    end
+    opfpath = "#{doctitle}.opf"
+    open(File::join(output, opfpath), 'w') do |io|
+        io.write(opf)
+    end
+    open(File::join(output, 'toc.ncx'), 'w') do |io|
+        io.write(ncx)
+    end
+    Dir::mkdir(File::join(output, 'META-INF')) unless FileTest::exists? File::join(output, 'META-INF')
+    open(File::join(output, 'META-INF', 'container.xml'), 'w') do |io|
+        io.write <<EOS
+<?xml version="1.0"?>
+<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
+   <rootfiles>
+      <rootfile full-path="#{opfpath}" media-type="application/oebps-package+xml"/>
+   </rootfiles>
+</container>
+EOS
+    end
+    open(File::join(output, 'mimetype'), 'w') do |io|
+        io.puts('application/epub+zip')
+    end
+
+    epub = "#{doctitle}.epub"
+    dir = Dir::pwd
+    begin
+        Dir::chdir(output)
+        `zip -Xr9D #{epub} mimetype META-INF #{opfpath}`
+        contents.each do |c|
+            `zip -Xr9D #{epub} #{c} -x mimetype`
+        end
+    ensure
+        Dir::chdir(dir)
+    end
+end
+def dotemplate template, params
+    t = template
+    for k,v in params
+        t = t.gsub(/%\(#{k}\)/, v)
+    end
+    t
+end
+def dofile path, output
+    s = open(path){|io|io.read}
+    return nil if Kconv::guess(s)==Kconv::BINARY
+    title = title(local(path))
+    s = dotemplate(TEMPLATE, 'title'=>local(path), 'body'=>s)
+    npath = title+".html"
+    if $dirstack.last and not $dirstack.last[:src]
+        $dirstack.last[:src] = npath
+        $indexes << $dirstack.last
+    end
+    open(File::join(output, npath), "w") do |io|
+        io.write(s)
+    end
+    level = $dirstack.empty? ? 1 : $dirstack.last[:level]+1
+    $indexes << {:src => npath, :name =>local(path), :type => :file, :level => level}
+    title
+end
+$dirstack = []
+$indexes = []
+def dodir dir, output
+    return [] if File::basename(dir)=~/^\..*/
+    $dirstack.push({:name =>local(dir), :src =>nil, :type => :dir, :level => $dirstack.size})
+    Dir::foreach(dir) do |i|
+        next if i=="."||i==".."
+        path = File::join(dir, i)
+        if FileTest::directory? path
+            dodir(path, output)
+        elsif FileTest::file? path
+            dofile(path, output)
+        end
+    end
+    $dirstack.pop
+end
+def doroot dir, output
+    $root = dir
+    Dir::foreach(dir) do |i|
+        next if i=="."||i==".."
+        path = File::join(dir, i)
+        if FileTest::directory? path
+            dodir(path, output)
+        elsif FileTest::file? path
+            dofile(path, output)
+        end
+    end
+end
+def main
+    if ARGV.size < 3
+        puts "Usage: %s INPUT OUTPUT TITLE" % [$0]
+        exit
+    end
+    input = ARGV[0]
+    output = ARGV[1]
+    Dir::mkdir(output) unless FileTest::exists? output
+    doroot(input, output)
+    dogenerate(output, ARGV[2])
+end
+main
