@@ -1,5 +1,5 @@
 class Sc2epub::Converter
-    require 'kconv'
+    require 'nkf'
     require 'fileutils'
     def initialize env, root, output
         @root = path(root)
@@ -73,17 +73,18 @@ class Sc2epub::Converter
         end
     end
     def dofile path
-        if File::extname(path) == '.html' or File::extname(path) == '.xhtml'
+        ext = File::extname(path)
+        if ext == '.html' or ext == '.xhtml' or ext == '.jpg' or ext == '.gif' or ext == '.png'
             FileUtils::cp(path, @output)
             return
         end
         output = @output
         s = open(path){|io|io.read}
-        enc = Kconv::guess(s)
-        if enc==Kconv::BINARY
+        enc = NKF::guess(s)
+        if enc==NKF::BINARY
             return nil
-        elsif enc!=Kconv::UTF8
-            s = s.toutf8
+        elsif enc!=NKF::ASCII and enc!=NKF::UTF8
+            s = NKF::nkf('-wxm0', s)
         end
         title = title(local(path))
         s = @template.xhtml('title'=>local(path), 'body'=>s)
@@ -101,18 +102,31 @@ class Sc2epub::Converter
     end
     def dodir dir
         return [] if File::basename(dir)=~/^\..*/
-        @dirstack.push({:name =>local(dir), :src =>nil,
+        @dirstack.push({:name =>local(dir), :src =>nil, :path => dir,
                            :type => :dir, :level => @dirstack.size})
-        Dir::foreach(dir) do |i|
-            next if i=="."||i==".."
-            path = File::join(dir, i)
-            if FileTest::directory? path
-                dodir(path)
-            elsif FileTest::file? path
-                dofile(path)
+        cache = {}
+        until(@dirstack.empty?)
+            dir = @dirstack.last[:path]
+            flag = false
+            Dir::foreach(dir) do |i|
+                next if i=="."||i==".."
+                path = File::join(dir, i)
+                next if cache[path]
+                if FileTest::directory? path
+                    @dirstack.push({:name =>local(path), :src =>nil, :path => path,
+                                       :type => :dir, :level => @dirstack.size})
+                    flag = true
+                    break
+                elsif FileTest::file? path
+                    dofile(path)
+                    cache[path] = true
+                end
+            end
+            unless flag
+                done = @dirstack.pop
+                cache[done[:path]] = true
             end
         end
-        @dirstack.pop
     end
     def doroot dir
         dir = path(dir)

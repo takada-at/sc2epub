@@ -1,3 +1,7 @@
+= 0.0.4
+Rewrite directory recursion to loop. for performance.
+Fix bug in Makefile
+
 = 0.0.3
 Rewrite some class.
 Add encoding-convert.
