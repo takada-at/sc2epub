@@ -7,8 +7,9 @@ convert sourcecode to epub
 == usage
  $ sc2epub some_directory output_directory project_name
  $ cd output_directory
- $ kindlegen project_name.epub # if you need mobi file
+ $ make
+ $ make kindle # if you need mobi file
 
 == notice
-sc2epub is depend on zip command. It executes commands such as
- $ zip -Xr9D some.epub
+sc2epub generate xhtml, xml, and Makefile. You need make for compilation of epub.
+And if you want to generate mobi file, you need kindlegen command.

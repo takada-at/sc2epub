@@ -2,6 +2,7 @@
 
 require 'kconv'
 require 'optparse'
+require 'fileutils'
 TEMPLATE = <<EOS
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -29,6 +30,7 @@ TEMPLATE_OPF = <<EOS
 <?xml version="1.0" encoding="utf-8"?>
 <package unique-identifier="uid">
   <metadata>
+    <meta name="cover" content="cover" />
     <dc-metadata xmlns:dc="http://purl.org/metadata/dublin_core"
     xmlns:oebpackage="http://openebook.org/namespaces/oeb-package/1.0/">
       <dc:Title>%(title)</dc:Title>
@@ -44,8 +46,9 @@ TEMPLATE_OPF = <<EOS
   </metadata>
   <manifest>
     <item id="index" media-type-"text/x-oeb1-document" href="index.html"></item>
-    %(items)
+%(items)
     <item id="toc" media-type="application/x-dtbncx+xml" href="toc.ncx"></item>
+    <item id="cover" href="cover.jpg" media-type="image/jpeg" />
   </manifest>
   <spine toc="toc">
     <itemref idref="index" />
@@ -75,7 +78,30 @@ TEMPLATE_NAVITEM = <<EOS
          <navLabel><text>%(title)</text></navLabel><content src="%(link)"/>
       </navPoint>
 EOS
+TEMPLATE_MAKEFILE = <<EOS
+PROJECT = %(title)
+EPUB = $(PROJECT).epub
+MOBI = $(PROJECT).mobi
+KINDLEGEN = kindlegen
 
+.PHONY: all
+all: $(EPUB)
+
+.PHONY: kindle
+kindle: $(MOBI)
+
+.PHONY: clean
+clean:
+\tfind ./ -name "*.epub" -exec rm {} \\;
+\tfind ./ -name "*.mobi" -exec rm {} \\;
+
+$(EPUB):
+\tzip -Xr9D $(EPUB) mimetype META-INF toc.ncx $(PROJECT).opf
+\tfind ./ -name "*.html" -o -name "*.jpg" | xargs zip -Xr9D $(EPUB)
+
+$(MOBI): $(EPUB)
+\t$(KINDLEGEN) $(EPUB)
+EOS
 $env = {}
 def local path
     if path.index($root)==0
@@ -90,14 +116,14 @@ def title path
     path.gsub(/\//, "_").gsub(/\./, '_')
 end
 def dogenerate output, doctitle
-    contents = ['index.html', 'toc.ncx']
     indexhtml = ''
     items = ''; c=0;
     nvitems = ''
+    cover = File::join(File::dirname(__FILE__), '../lib/cover.jpg')
+    FileUtils::cp(cover, output)
     $indexes.each do |data|
         title = data[:name]
         link = data[:src]
-        contents << link
         if data[:type]==:dir && data[:level]+2<=4
             tagname = "h" + (data[:level]+2).to_s
         else
@@ -137,17 +163,9 @@ EOS
     open(File::join(output, 'mimetype'), 'w') do |io|
         io.puts('application/epub+zip')
     end
-
-    epub = "#{doctitle}.epub"
-    dir = Dir::pwd
-    begin
-        Dir::chdir(output)
-        `zip -Xr9D #{epub} mimetype META-INF #{opfpath}`
-        contents.each do |c|
-            `zip -Xr9D #{epub} #{c} -x mimetype`
-        end
-    ensure
-        Dir::chdir(dir)
+    makefile = dotemplate(TEMPLATE_MAKEFILE, 'title'=>doctitle)
+    open(File::join(output, 'Makefile'), 'w') do |io|
+        io.write(makefile)
     end
 end
 def dotemplate template, params
