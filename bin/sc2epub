@@ -202,18 +202,14 @@ def doroot dir, output
         end
     end
 end
+require 'sc2epub'
 def main
-    if ARGV.size < 3
-        puts "Usage: %s INPUT OUTPUT TITLE" % [$0]
-        exit
-    end
     input = ARGV[0]
     output = ARGV[1]
-    VERSION = "0.0.1"
     user = ENV['USER']
     opts = OptionParser.new("Usage: #{File::basename($0)} SOME_DIR OUTPUT_DIR PROJECT_NAME")
     opts.on("-v", "--version", "show version") do
-        puts "%s %s" %[File.basename($0), VERSION]
+        puts "%s %s" %[File.basename($0), Sc2epub::VERSION]
         puts "ruby %s" % RUBY_VERSION
         exit
     end
@@ -221,6 +217,10 @@ def main
         user = v
     end
     opts.on_tail("-h", "--help", "show this message") do
+        puts opts
+        exit
+    end
+    if ARGV.size < 3
         puts opts
         exit
     end
