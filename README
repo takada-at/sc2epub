@@ -1,0 +1,5 @@
+= sc2epub
+convert sourcecode to epub
+
+== usage
+ $ sc2epub some_directory output_directory project_name

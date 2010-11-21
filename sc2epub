@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'kconv'
+require 'optparse'
 TEMPLATE = <<EOS
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -32,7 +33,7 @@ TEMPLATE_OPF = <<EOS
     xmlns:oebpackage="http://openebook.org/namespaces/oeb-package/1.0/">
       <dc:Title>%(title)</dc:Title>
       <dc:Language>ja</dc:Language>
-      <dc:Creator>takada-at</dc:Creator>
+      <dc:Creator>%(author)</dc:Creator>
       <dc:Description>..</dc:Description>
       <dc:Date>%(date)</dc:Date>
     </dc-metadata>
@@ -74,6 +75,8 @@ TEMPLATE_NAVITEM = <<EOS
          <navLabel><text>%(title)</text></navLabel><content src="%(link)"/>
       </navPoint>
 EOS
+
+$env = {}
 def local path
     if path.index($root)==0
         path = path[$root.size, path.size]
@@ -106,8 +109,9 @@ def dogenerate output, doctitle
             nvitems += dotemplate(TEMPLATE_NAVITEM, 'id'=>"navPoint-#{c}", 'order'=>c.to_s, 'link'=>link, 'title'=>title)
         end
     end
+    author = $env[:author]
     indexhtml = dotemplate(TEMPLATE_INDEX, 'title'=>'index', 'body'=>indexhtml)
-    opf = dotemplate(TEMPLATE_OPF, 'title'=>doctitle, 'date'=>Time::now.strftime("%Y/%m/%d"), 'items'=>items)
+    opf = dotemplate(TEMPLATE_OPF, 'title'=>doctitle, 'date'=>Time::now.strftime("%Y/%m/%d"), 'items'=>items, 'author'=>author)
     ncx = dotemplate(TEMPLATE_NCX, 'title'=>doctitle, 'navitems'=>nvitems)
     open(File::join(output, 'index.html'), 'w') do |io|
         io.write(indexhtml)
@@ -205,6 +209,23 @@ def main
     end
     input = ARGV[0]
     output = ARGV[1]
+    VERSION = "0.0.1"
+    user = ENV['USER']
+    opts = OptionParser.new("Usage: #{File::basename($0)} SOME_DIR OUTPUT_DIR PROJECT_NAME")
+    opts.on("-v", "--version", "show version") do
+        puts "%s %s" %[File.basename($0), VERSION]
+        puts "ruby %s" % RUBY_VERSION
+        exit
+    end
+    opts.on("-u", "--user", "set user name") do |v|
+        user = v
+    end
+    opts.on_tail("-h", "--help", "show this message") do
+        puts opts
+        exit
+    end
+
+    $env[:author] = user
     Dir::mkdir(output) unless FileTest::exists? output
     doroot(input, output)
     dogenerate(output, ARGV[2])
