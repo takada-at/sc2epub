@@ -1,3 +1,6 @@
+= 0.0.6
+Add html escape.
+
 = 0.0.5
 Fix bug in generating index.html.
 Stop copy html files.
