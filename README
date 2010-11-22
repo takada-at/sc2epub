@@ -20,7 +20,7 @@ convert sourcecode to epub
  $ cp readline.mobi ~/
 
 == notice
-sc2epub generate xhtml, xml, and Makefile. You need `make' command for compilation of epub.
+sc2epub generates xhtml, xml, and Makefile. You need `make' command for compilation of epub.
 And if you want to generate mobi file, you need `kindlegen' command.
 About kindlegen see below.
 http://www.amazon.com/gp/feature.html?ie=UTF8&docId=1000234621
