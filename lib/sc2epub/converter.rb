@@ -1,6 +1,7 @@
 class Sc2epub::Converter
     require 'nkf'
     require 'fileutils'
+    require 'cgi'
     def initialize env, root, output
         @root = path(root)
         @output = output
@@ -87,6 +88,7 @@ class Sc2epub::Converter
             s = NKF::nkf('-wxm0', s)
         end
         title = title(local(path))
+        s = CGI::escapeHTML(s)
         s = @template.xhtml('title'=>local(path), 'body'=>s)
         npath = title+".html"
         if @dirstack.last and not @dirstack.last[:src]
