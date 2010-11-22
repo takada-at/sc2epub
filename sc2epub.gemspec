@@ -4,8 +4,7 @@ GEMSPEC = Gem::Specification::new do |s|
     s.name = 'sc2epub'
     s.version = Sc2epub::VERSION
     s.author = 'takada-at'
-    s.email = 'nightly@at-akada.org'
-    s.date = '2010-11-21'
+    s.email = 'nightly at at-akada dot org'
     s.summary = 'sourcecode to epub'
     s.platform = Gem::Platform::RUBY
     s.required_ruby_version = '>= 1.8.6'

@@ -3,7 +3,7 @@ class Sc2epub::Main
     def main
         input = ARGV[0]
         output = ARGV[1]
-        opts = OptionParser.new("Usage: #{File::basename($0)} SOME_DIR OUTPUT_DIR PROJECT_NAME")
+        opts = OptionParser.new("Usage: #{File::basename($0)} SOURCE_DIR OUTPUT_DIR PROJECT_NAME")
         opts.on("-v", "--version", "show version") do
             puts "%s %s" %[File.basename($0), Sc2epub::VERSION]
             puts "ruby %s" % RUBY_VERSION

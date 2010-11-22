@@ -5,11 +5,19 @@ convert sourcecode to epub
  $ gem install sc2epub
 
 == usage
- $ sc2epub some_directory output_directory project_name
- $ cd output_directory
+ $ sc2epub SOURCECODE_DIRECTORY OUTPUT_DIRECTORY PROJECT_NAME
+ $ cd OUTPUT_DIRECTORY
  $ make
  $ make kindle # if you need mobi file
 
+== example
+ $ sc2epub ~/src/readline-5.2 ~/src/readline-epub readline
+ $ cd ~/src/readline-epub
+ $ make
+ $ make kindle
+
 == notice
-sc2epub generate xhtml, xml, and Makefile. You need make for compilation of epub.
-And if you want to generate mobi file, you need kindlegen command.
+sc2epub generate xhtml, xml, and Makefile. You need `make' command for compilation of epub.
+And if you want to generate mobi file, you need `kindlegen' command.
+About kindlegen see below.
+http://www.amazon.com/gp/feature.html?ie=UTF8&docId=1000234621
