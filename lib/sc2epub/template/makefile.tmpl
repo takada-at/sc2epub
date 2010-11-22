@@ -15,8 +15,8 @@ clean:
 	find ./ -name "*.mobi" -exec rm {} \;
 
 $(EPUB):
-	zip -Xr9D $(EPUB) mimetype META-INF toc.ncx $(PROJECT).opf
-	find ./ -name "*.html" -o -name "*.jpg" | xargs zip -Xr9D $(EPUB)
+	zip -Xr9D $(EPUB) mimetype META-INF toc.ncx $(PROJECT).opf cover.jpg
+	find ./ -name "*.html" -print0 | xargs -0 zip -Xr9D $(EPUB)
 
 $(MOBI): $(EPUB)
 	$(KINDLEGEN) $(EPUB)

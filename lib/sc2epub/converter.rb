@@ -115,8 +115,7 @@ class Sc2epub::Converter
                 path = File::join(dir, i)
                 next if cache[path]
                 if FileTest::directory? path
-                    subdir = path
-                    break
+                    subdir = path unless subdir
                 elsif FileTest::file? path
                     dofile(path)
                     cache[path] = true

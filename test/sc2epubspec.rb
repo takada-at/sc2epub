@@ -98,6 +98,14 @@ describe Sc2epub::Converter, 'when on sc2epub/lib'do
         p1 = s.index('sc2epub/converter.rb')
         p0.should < p1
     end
+    it 'should place sc2epub/main.rb and sc2epub/template.rb before sc2epub/template' do
+        s = open(File::join(@out, 'index.html')){|io|io.read}
+        p0 = s.index('sc2epub/main.rb</a>')
+        p1 = s.index('sc2epub/template.rb</a>')
+        p2 = s.index('sc2epub/template</a>')
+        p0.should < p2
+        p1.should < p2
+    end
     after(:all) do
         if FileTest::exists? @out
             `rm -r #{@out}`
