@@ -8,13 +8,16 @@ convert sourcecode to epub
  $ sc2epub SOURCECODE_DIRECTORY OUTPUT_DIRECTORY PROJECT_NAME
  $ cd OUTPUT_DIRECTORY
  $ make
+ # it generates PROJECT_NAME.epub
  $ make kindle # if you need mobi file
+ # it generates PROJECT_NAME.mobi
 
 == example
  $ sc2epub ~/src/readline-5.2 ~/src/readline-epub readline
  $ cd ~/src/readline-epub
  $ make
  $ make kindle
+ $ cp readline.mobi ~/
 
 == notice
 sc2epub generate xhtml, xml, and Makefile. You need `make' command for compilation of epub.
