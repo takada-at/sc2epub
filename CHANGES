@@ -1,3 +1,7 @@
+= 0.0.5
+Fix bug in generating index.html.
+Stop copy html files.
+
 = 0.0.4
 Rewrite directory recursion to loop. for performance.
 Fix bug in Makefile

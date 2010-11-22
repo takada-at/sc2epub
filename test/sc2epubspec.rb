@@ -19,15 +19,15 @@ describe Sc2epub::Converter, 'when on html' do
         @converter.doroot(@in)
         @converter.dogenerate('test')
     end
-    it 'should copy html' do
-        FileTest.should be_exists(File::join(@out, 'some.html'))
-    end
+    #it 'should copy html' do
+    #    FileTest.should be_exists(File::join(@out, 'some.html'))
+    #end
     it 'should rewrite source code' do
         FileTest.should be_exists(File::join(@out, 'some_rb.html'))
     end
-    it 'should not rewrite html' do
-        FileTest.should_not be_exists(File::join(@out, 'some_html.html'))
-    end
+    #it 'should not rewrite html' do
+    #    FileTest.should_not be_exists(File::join(@out, 'some_html.html'))
+    #end
     after(:all) do
         `rm -r #{@in}` if FileTest::exists? @in
         `rm -r #{@out}` if FileTest::exists? @out
@@ -91,6 +91,12 @@ describe Sc2epub::Converter, 'when on sc2epub/lib'do
         Regexp::last_match[1].should == 'en'
         /<dc:Creator>(.*)<\/dc:Creator>/.match(s).should_not be(nil)
         Regexp::last_match[1].should == 'test'
+    end
+    it 'should place sc2epub.rb before sc2epub/converter.rb in index.html' do
+        s = open(File::join(@out, 'index.html')){|io|io.read}
+        p0 = s.index('sc2epub.rb')
+        p1 = s.index('sc2epub/converter.rb')
+        p0.should < p1
     end
     after(:all) do
         if FileTest::exists? @out

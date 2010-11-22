@@ -73,11 +73,11 @@ class Sc2epub::Converter
         end
     end
     def dofile path
-        ext = File::extname(path)
-        if ext == '.html' or ext == '.xhtml' or ext == '.jpg' or ext == '.gif' or ext == '.png'
-            FileUtils::cp(path, @output)
-            return
-        end
+        #ext = File::extname(path)
+        #if ext == '.html' or ext == '.xhtml' or ext == '.jpg' or ext == '.gif' or ext == '.png'
+        #    FileUtils::cp(path, @output)
+        #    return
+        #end
         output = @output
         s = open(path){|io|io.read}
         enc = NKF::guess(s)
@@ -107,24 +107,26 @@ class Sc2epub::Converter
         cache = {}
         until(@dirstack.empty?)
             dir = @dirstack.last[:path]
-            flag = false
+            subdir = nil
             Dir::foreach(dir) do |i|
                 next if i=="."||i==".."
                 path = File::join(dir, i)
                 next if cache[path]
                 if FileTest::directory? path
-                    @dirstack.push({:name =>local(path), :src =>nil, :path => path,
-                                       :type => :dir, :level => @dirstack.size})
-                    flag = true
+                    subdir = path
                     break
                 elsif FileTest::file? path
                     dofile(path)
                     cache[path] = true
                 end
             end
-            unless flag
+            if !subdir
                 done = @dirstack.pop
                 cache[done[:path]] = true
+            else
+                path = subdir
+                @dirstack.push({:name =>local(path), :src =>nil, :path => path,
+                                   :type => :dir, :level => @dirstack.size})
             end
         end
     end
