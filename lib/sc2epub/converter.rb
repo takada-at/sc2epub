@@ -31,7 +31,9 @@ class Sc2epub::Converter
         items = ''; c=0;
         nvitems = ''
         cover = File::join(File::dirname(__FILE__), 'cover.jpg')
-        FileUtils::cp(cover, output)
+	#prettify = File::join(File::dirname(__FILE__), 'prettify')
+	#::FileUtils::cp_r(prettify, output)
+        ::FileUtils::cp(cover, output)
         @indexes.each do |data|
             title = data[:name]
             link = data[:src]

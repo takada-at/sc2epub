@@ -13,6 +13,7 @@ EOS
     TEMPLATE_ITEM = "<item id=\"%(id)\" media-type=\"text/x-oeb1-document\" href=\"%(link)\"></item>"
     TEMPLATE_CONTAINER = 'container.tmpl'
     def initialize
+	@map = {}
         @dir = File::join(File::dirname(__FILE__), 'template')
     end
     def container params
@@ -44,7 +45,12 @@ EOS
     end
     def dotemplate template, params
         if template.rindex('.tmpl')
-            t = open(File::join(@dir, template)){|io|io.read}
+	    if @map.has_key? template
+		t = @map[template]
+	    else
+		t = open(File::join(@dir, template)){|io|io.read}
+		@map[template] = t
+	    end
         else
             t = template
         end

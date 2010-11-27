@@ -1,9 +1,7 @@
 class Sc2epub::Main
     require 'optparse'
     def main
-        input = ARGV[0]
-        output = ARGV[1]
-        opts = OptionParser.new("Usage: #{File::basename($0)} SOURCE_DIR OUTPUT_DIR PROJECT_NAME")
+        opts = OptionParser.new("Usage: #{File::basename($0)} SOURCE_DIR [OUTPUT_DIR] [PROJECT_NAME]")
         opts.on("-v", "--version", "show version") do
             puts "%s %s" %[File.basename($0), Sc2epub::VERSION]
             puts "ruby %s" % RUBY_VERSION
@@ -20,9 +18,21 @@ class Sc2epub::Main
             puts opts
             exit
         end
-        if ARGV.size < 3
+	opts.parse!
+        if ARGV.size < 1
             puts opts
             exit
+        end
+        input = ARGV[0]
+        if ARGV.size < 2
+            output = File::basename(input) + '-epub'
+        else
+            output = ARGV[1]
+        end
+        if ARGV.size < 3
+            project = File::basename(input)
+        else
+            project = ARGV[2]
         end
         user = ENV['USER']
         env = {
@@ -32,6 +42,6 @@ class Sc2epub::Main
         Dir::mkdir(output) unless FileTest::exists? output
         @converter = Sc2epub::Converter::new(env, input, output)
         @converter.doroot(input)
-        @converter.dogenerate(ARGV[2])
+        @converter.dogenerate(project)
     end
 end
